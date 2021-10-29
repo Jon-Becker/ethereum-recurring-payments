@@ -12,7 +12,7 @@ pragma solidity >=0.8.4;
 /// @custom:experimental This is an experimental contract, and is still a PoC
 ///                      https://jbecker.dev/research/ethereum-recurring-payments/
 
-contract ERC20Interface {
+contract IERC20 {
   function approve(address spender, uint256 value) public virtual returns (bool) {}
   function transfer(address to, uint256 value) public virtual returns (bool) {}
   function transferFrom(address from, address to, uint256 value) public virtual returns (bool) {}
@@ -59,7 +59,7 @@ contract RecurringPayments {
   /// @notice This is the subscription struct which holds all information on a
   ///         subscription
   /// @dev    TokenAddress must be a conforming ERC20 contract that supports the
-  ///         ERC20Interface
+  ///         IERC20
   /// @param Customer           : The customer's address 
   /// @param Payee              : The payee's address 
   /// @param Allowance          : Total cost of ERC20 tokens per SubscriptionPeriod
@@ -136,8 +136,8 @@ contract RecurringPayments {
     string memory _name, 
     string memory _description, 
     uint256 _subscriptionPeriod ) public virtual {
-    ERC20Interface tokenInterface;
-    tokenInterface = ERC20Interface(_token);
+    IERC20 tokenInterface;
+    tokenInterface = IERC20(_token);
 
     require(getSubscription(msg.sender, _payee).IsActive != true, "0xSUB: Active subscription already exists.");
     require(_subscriptionCost <= tokenInterface.balanceOf(msg.sender), "0xSUB: Insufficient token balance.");
@@ -190,8 +190,8 @@ contract RecurringPayments {
     require(getSubscription(_customer, msg.sender).IsActive == true, "0xSUB: Subscription already inactive.");
     require(_subscriptionPaid(_customer, msg.sender) != true, "0xSUB: Subscription already paid for this period.");
 
-    ERC20Interface tokenInterface;
-    tokenInterface = ERC20Interface(getSubscription(_customer, msg.sender).TokenAddress);
+    IERC20 tokenInterface;
+    tokenInterface = IERC20(getSubscription(_customer, msg.sender).TokenAddress);
 
     subscriptions[_customer][msg.sender].LastExecutionDate = block.timestamp;
     require(tokenInterface.transferFrom(_customer, msg.sender, getSubscription(_customer, msg.sender).Allowance), "0xSUB: Subscription payment failed.");
