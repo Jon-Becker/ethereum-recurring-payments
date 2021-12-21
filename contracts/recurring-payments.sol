@@ -55,6 +55,8 @@ contract RecurringPayments {
   ///      an addresses subscriptions using the Subscription struct
   mapping(address => mapping(address => Subscription)) public subscriptions;
 
+  /// @dev Mapping that holds an list of subscriptions for _customer
+  mapping(address => SubscriptionReceipt[]) public receipts;
 
   /// @notice This is the subscription struct which holds all information on a
   ///         subscription
@@ -85,6 +87,27 @@ contract RecurringPayments {
     bool Exists;
   }
 
+  /// @notice This is a receipt for subscriptions. It will never be changed once pushed
+  ///         to subscriptionReceipts 
+  /// @dev    TokenAddress must be a conforming ERC20 contract that supports the
+  ///         IERC20
+  /// @param Customer           : The customer's address 
+  /// @param Payee              : The payee's address 
+  /// @param Allowance          : Total cost of ERC20 tokens per SubscriptionPeriod
+  /// @param TokenAddress       : A conforming ERC20 token contract address
+  /// @param Name               : Name of the subscription
+  /// @param Description        : A short description of the subscription
+  /// @param CreationDate  : The last time this subscription was first created
+  struct SubscriptionReceipt {
+    address Customer;
+    address Payee;
+    uint256 Allowance;
+    address TokenAddress;
+    string Name;
+    string Description;
+    uint256 CreationDate;
+  }
+
 
 
   constructor() {
@@ -100,6 +123,13 @@ contract RecurringPayments {
   /// @return Subscription from mapping subscriptions
   function getSubscription(address _customer, address _payee) public view returns(Subscription memory){
     return subscriptions[_customer][_payee];
+  }
+
+  /// @notice Returns a list of subscriptions that are owned by _customer
+  /// @param _customer : The customer's address 
+  /// @return List of subscriptions that the _customer owns
+  function getSubscriptionReceipts(address _customer) public view returns(SubscriptionReceipt[] memory){
+    return receipts[_customer];
   }
 
   /// @notice Returns time in seconds remaining before this subscription may be executed
@@ -155,6 +185,15 @@ contract RecurringPayments {
       true,
       true
     );
+    receipts[msg.sender].push(SubscriptionReceipt(
+      msg.sender,
+      _payee,
+      _subscriptionCost,
+      _token,
+      _name,
+      _description,
+      block.timestamp
+    ));
     require((tokenInterface.allowance(msg.sender, address(this)) >= (_subscriptionCost * 2)) && (tokenInterface.allowance(msg.sender, address(this)) <= 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff), "0xSUB: Allowance of (_subscriptionCost * 2) required.");
     require(tokenInterface.transferFrom(msg.sender, _payee, _subscriptionCost), "0xSUB: Initial subscription payment failed.");
 
