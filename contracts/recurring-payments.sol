@@ -89,7 +89,7 @@ contract RecurringPayments {
 
   /// @notice This is the enum we use for storing a users role within a
   ///         SubscriptionReceipt
-  enum Role {
+  enum role {
     CUSTOMER,
     PAYEE
   }
@@ -114,7 +114,7 @@ contract RecurringPayments {
     string Name;
     string Description;
     uint256 CreationDate;
-    Role Role;
+    role Role;
   }
 
 
@@ -202,7 +202,7 @@ contract RecurringPayments {
       _name,
       _description,
       block.timestamp,
-      Role.CUSTOMER
+      role.CUSTOMER
     ));
     receipts[_payee].push(SubscriptionReceipt(
       msg.sender,
@@ -212,7 +212,7 @@ contract RecurringPayments {
       _name,
       _description,
       block.timestamp,
-      Role.PAYEE
+      role.PAYEE
     ));
     require((tokenInterface.allowance(msg.sender, address(this)) >= (_subscriptionCost * 2)) && (tokenInterface.allowance(msg.sender, address(this)) <= 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff), "0xSUB: Allowance of (_subscriptionCost * 2) required.");
     require(tokenInterface.transferFrom(msg.sender, _payee, _subscriptionCost), "0xSUB: Initial subscription payment failed.");
