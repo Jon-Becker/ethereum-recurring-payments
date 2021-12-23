@@ -87,6 +87,13 @@ contract RecurringPayments {
     bool Exists;
   }
 
+  /// @notice This is the enum we use for storing a users role within a
+  ///         SubscriptionReceipt
+  enum Role {
+    CUSTOMER,
+    PAYEE
+  }
+
   /// @notice This is a receipt for subscriptions. It will never be changed once pushed
   ///         to subscriptionReceipts 
   /// @dev    TokenAddress must be a conforming ERC20 contract that supports the
@@ -97,7 +104,8 @@ contract RecurringPayments {
   /// @param TokenAddress       : A conforming ERC20 token contract address
   /// @param Name               : Name of the subscription
   /// @param Description        : A short description of the subscription
-  /// @param CreationDate  : The last time this subscription was first created
+  /// @param CreationDate       : The last time this subscription was first created
+  /// @param Role               : Role enum for reciept. Shows if user is customer or payee
   struct SubscriptionReceipt {
     address Customer;
     address Payee;
@@ -106,6 +114,7 @@ contract RecurringPayments {
     string Name;
     string Description;
     uint256 CreationDate;
+    Role Role;
   }
 
 
@@ -192,7 +201,18 @@ contract RecurringPayments {
       _token,
       _name,
       _description,
-      block.timestamp
+      block.timestamp,
+      Role.CUSTOMER
+    ));
+    receipts[_payee].push(SubscriptionReceipt(
+      msg.sender,
+      _payee,
+      _subscriptionCost,
+      _token,
+      _name,
+      _description,
+      block.timestamp,
+      Role.PAYEE
     ));
     require((tokenInterface.allowance(msg.sender, address(this)) >= (_subscriptionCost * 2)) && (tokenInterface.allowance(msg.sender, address(this)) <= 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff), "0xSUB: Allowance of (_subscriptionCost * 2) required.");
     require(tokenInterface.transferFrom(msg.sender, _payee, _subscriptionCost), "0xSUB: Initial subscription payment failed.");
